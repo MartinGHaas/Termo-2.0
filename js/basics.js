@@ -4,7 +4,7 @@ const $words = document.querySelectorAll('.word');
 
 const $games= document.querySelectorAll('.game');
 
-var palavra = 'teste';
+var palavra = 'vasco';
 var palavraArr = palavra.split('')
 
 //comportamento padrão
@@ -12,92 +12,125 @@ $words.forEach(function(i){
     i.classList.add('transition');
     i.classList.add('capitalize');
 })
+$words[0].focus();
+var lastTime = false;
 
 //add letras
 var validos = /[a-zA-Z]/;
-var palavraTerminada = [null, null, null, null, null]
+var palavraTerminada = [null, null, null, null, null];
 
-$words[0].focus();
 $words.forEach(function(i, index){
     i.addEventListener('input', function(){
         if(!i.value.match(validos)){
             i.value = null;
         }
-        if(i.value.length == 1){
-            $words[index + 1].focus();
-        };        
-        palavraTerminada[index] = i.value;
-    })
 
+        if($words[29] == document.activeElement){
+            lastTime = true;
+        }
+
+        if(i.value.length == 1 && !lastTime){
+            $words[index + 1].focus();
+        };
+        palavraTerminada[index] = i.value;
+
+    })
     i.addEventListener('keydown', function(event) {
         let key = event.key;        
-        if (key == "Backspace" || key == "Delete") {
+        if (key == "Backspace") {
             if(i.value.length !=1){
                 $words[index - 1].focus();
             }
-        }
+        }        
     })
 })
 
 var acertou = false;
 
+function resetToAnother(pattern){
+    $words.forEach(function(s){
+        if(!s.disabled){
+            s.disabled = true;
+        }
+    })
+    if(!lastTime){
+        for(var i = 0; i<5; i++){
+            $words[pattern+i].disabled = false;
+        }
+    }
+      
+    $words[pattern].focus();
+}
+
+function palavraCompleta(param){
+    if(param == null){
+        return false;
+    }else{
+        return true;
+    }
+}
+
+function resetWord(pattern){
+    for(let i = 0; i<5+pattern; i++){
+        palavraTerminada[i] = null;
+    }
+}
+
+var novo = new RegExp('[' + palavra + ']');
+
 function checaInput(i){
-    var novo = /[t|e|s]/
     var repeticoes = 0;
+    var acertos = 0;
 
     while(repeticoes<5 && !acertou){
-        if(palavraArr[i] == palavraTerminada[i].toLowerCase()){
+        let tempWord = palavraTerminada[i].toLowerCase();
+
+        if(palavraArr[repeticoes] == tempWord){
             $words[i].classList.add('correct');
-        }else if(novo.test(palavraTerminada[i])){
+            acertos++;
+        }else if(novo.test(tempWord)){
             $words[i].classList.add('parcial')
         }else{
             $words[i].classList.add('incorrect');
         }
+        if(acertos == 5){
+            acertou = true;
+        }
+
         i++;
         repeticoes++;
+        resetToAnother(i);
     }
-    
-}
-function disableGame(){
-    var juntaPalavra = palavraTerminada.join('');
-    if(juntaPalavra == palavra){
-        acertou = true;
-    }
+    resetWord(i);
+}    
 
+function disableGame(){
     if(acertou){
         $words.forEach(function(i){
             i.disabled = true;
         })
     }
 }
-function resetToAnother(pattern){
-    for(var i = 0; i<5; i++){
-        $words[pattern+i].disabled = true;
-        $words[pattern+i+5].disabled = false;
-        $words[pattern+i+1].focus();
-    }
-}
 
-var testeabc = 0;
+var patternSum = 0;
+var completa = false;
+
 $body.addEventListener('keydown', function(event){
     let key = event.key;
     
     if(key == 'Enter'){
-        checaInput(testeabc);
-        resetToAnother(testeabc);
-        testeabc+=5;
-        disableGame();
+        palavraTerminada.forEach(function(words){
+            completa =  palavraCompleta(words);
+        })
+
+        if(completa){
+            checaInput(patternSum);
+            disableGame();
+            patternSum+=5;
+        }
+
+        completa = false;
     }
 })
 
-//checa Input Terminado
-
-//add desativados
-const disabled = document.querySelectorAll('.disabled');
-
-disabled.forEach(function(input){
-    input.disabled = true;
-})
-
-//O código ainda está ainda mais mal estruturado, com possíveis repetições e em seu estado  ainda inicial. Releve diversos problemas, pois todos serão corrigidos!
-//Está com muitos mais bugs, mas pensando pelo lado positivo, tem mais funcionalidades. Mas ainda ta em seu estado inicial, então tem muita coisa a ser melhorada ainda.
+//O código ainda está ainda mais mal estruturado, com possíveis repetições e em seu estado mediano. Releve diversos problemas, pois todos serão corrigidos!
